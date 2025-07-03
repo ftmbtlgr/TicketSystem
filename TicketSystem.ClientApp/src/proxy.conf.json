@@ -1,0 +1,7 @@
+{
+  "/api": {
+    "target": "https://localhost:5001", // .NET API adresi
+    "secure": false,
+    "changeOrigin": true
+  }
+}
