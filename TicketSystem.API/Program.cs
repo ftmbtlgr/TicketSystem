@@ -32,7 +32,7 @@ builder.Services.AddSwaggerGen();
 // CORS politikasý
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
+    options.AddPolicy("AllowAngular",
         builder => builder.WithOrigins("http://localhost:4200") // Angular uygulamasýnýn adresi
                            .AllowAnyHeader()
                            .AllowAnyMethod());

@@ -11,7 +11,25 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketSystem.Core", "Ticket
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TicketSystem.Application", "TicketSystem.Application\TicketSystem.Application.csproj", "{7D8A4B50-33FA-422E-B3C7-5050F22D38B7}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "TicketSystem.ClientApp", "TicketSystem.ClientApp\TicketSystem.ClientApp.esproj", "{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "TicketSystem.ClientApp", "..\..\..\OneDrive\Masaüstü\TicketSystem\TicketSystem.ClientApp\", "{2C444DEE-AC88-6A5F-CFE2-91F69A51EF3C}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_52363"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\OneDrive\Masaüstü\TicketSystem\TicketSystem.ClientApp\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_52363\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_52363"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\OneDrive\Masaüstü\TicketSystem\TicketSystem.ClientApp\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_52363\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "52363"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,12 +53,10 @@ Global
 		{7D8A4B50-33FA-422E-B3C7-5050F22D38B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D8A4B50-33FA-422E-B3C7-5050F22D38B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D8A4B50-33FA-422E-B3C7-5050F22D38B7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3DB89C1A-17CA-EDF6-A092-93FB17D61A50}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{2C444DEE-AC88-6A5F-CFE2-91F69A51EF3C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C444DEE-AC88-6A5F-CFE2-91F69A51EF3C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2C444DEE-AC88-6A5F-CFE2-91F69A51EF3C}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{2C444DEE-AC88-6A5F-CFE2-91F69A51EF3C}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
