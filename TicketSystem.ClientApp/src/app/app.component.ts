@@ -2,6 +2,8 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from "./layout/header/header.component";
 import { HttpClient } from '@angular/common/http';
+import { Ticket } from './shared/models/ticket';
+import { Pagination } from './shared/models/pagination';
 
 @Component({
   selector: 'app-root',
@@ -13,11 +15,12 @@ import { HttpClient } from '@angular/common/http';
 export class AppComponent implements OnInit {
   baseUrl = 'https://localhost:5001/api/';
   private http = inject(HttpClient);
-  title = 'hello';
+  title = 'ticket-system';
+  tickets: Ticket[] = [];
 
   ngOnInit(): void {
-    this.http.get(this.baseUrl + 'users').subscribe({
-      next: data => console.log(data),
+    this.http.get<Pagination<Ticket>>(this.baseUrl + 'tickets').subscribe({
+      next: response => this.tickets = response.data,
       error: error => console.log(error),
       complete: () => console.log('complete')
   })

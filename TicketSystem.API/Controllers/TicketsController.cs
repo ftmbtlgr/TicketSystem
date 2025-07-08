@@ -7,14 +7,9 @@ namespace TicketSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class TicketsController : ControllerBase
+    public class TicketsController(ITicketService ticketService) : ControllerBase
     {
-        private readonly ITicketService _ticketService;
-
-        public TicketsController(ITicketService ticketService)
-        {
-            _ticketService = ticketService;
-        }
+        private readonly ITicketService _ticketService = ticketService;
 
         // GET: api/tickets
         [HttpGet]
