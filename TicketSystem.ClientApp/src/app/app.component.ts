@@ -4,6 +4,7 @@ import { HeaderComponent } from "./layout/header/header.component";
 import { HttpClient } from '@angular/common/http';
 import { Ticket } from './shared/models/ticket';
 import { Pagination } from './shared/models/pagination';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,7 @@ import { Pagination } from './shared/models/pagination';
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements OnInit {
-  baseUrl = 'https://localhost:5001/api/';
+  baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
   title = 'ticket-system';
   tickets: Ticket[] = [];

@@ -1,0 +1,21 @@
+<h2>Yeni Ticket Oluştur</h2>
+
+<form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="title">Başlık</label><br />
+    <input id="title" formControlName="title" />
+    <div *ngIf="ticketForm.get('title')?.invalid && ticketForm.get('title')?.touched">
+      Başlık zorunludur.
+    </div>
+  </div>
+
+  <div>
+    <label for="description">Açıklama</label><br />
+    <textarea id="description" formControlName="description"></textarea>
+    <div *ngIf="ticketForm.get('description')?.invalid && ticketForm.get('description')?.touched">
+      Açıklama zorunludur.
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="ticketForm.invalid">Kaydet</button>
+</form>

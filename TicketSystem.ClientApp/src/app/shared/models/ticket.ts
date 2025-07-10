@@ -1,4 +1,8 @@
-export type Ticket = {
+import { User } from './user';
+import { Comment } from './comment'; 
+import { Attachment } from './attachment';
+
+export interface Ticket {
   ticketId: number;
   title: string;
   description: string;
