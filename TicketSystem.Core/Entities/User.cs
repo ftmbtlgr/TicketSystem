@@ -25,8 +25,8 @@ namespace TicketSystem.Core.Entities
         public bool IsActive { get; set; } = true;
 
         // İlişkiler
-        public ICollection<Ticket>? CreatedTickets { get; set; } 
-        public ICollection<Ticket>? AssignedTickets { get; set; } 
+        public ICollection<TicketDto>? CreatedTickets { get; set; } 
+        public ICollection<TicketDto>? AssignedTickets { get; set; } 
         public ICollection<Comment>? Comments { get; set; } 
     }
 }

@@ -15,7 +15,7 @@ namespace TicketSystem.Infrastructure.Data.Repositories
 
         // Belirli bir ID'ye sahip ticket'ı asenkron olarak getirir.
         // İlişkili kullanıcıları ve yorumları da (eager loading) dahil eder.
-        public async Task<Ticket?> GetByIdAsync(int id)
+        public async Task<TicketDto?> GetByIdAsync(int id)
         {
             return await _context.Tickets
                                  .Include(t => t.CreatedByUser)      // Ticket'ı oluşturan kullanıcıyı dahil et
@@ -28,7 +28,7 @@ namespace TicketSystem.Infrastructure.Data.Repositories
 
         // Tüm ticket'ları asenkron olarak getirir (basit listeleme için).
         // Bu metodda daha az "Include" yaparak performans artışı sağlanabilir.
-        public async Task<IEnumerable<Ticket>> GetAllAsync()
+        public async Task<IEnumerable<TicketDto>> GetAllAsync()
         {
             return await _context.Tickets
                                  .Include(t => t.CreatedByUser)
@@ -38,7 +38,7 @@ namespace TicketSystem.Infrastructure.Data.Repositories
         }
 
         // Belirli bir kullanıcının oluşturduğu tüm ticket'ları asenkron olarak getirir.
-        public async Task<IEnumerable<Ticket>> GetTicketsByUserIdAsync(int userId)
+        public async Task<IEnumerable<TicketDto>> GetTicketsByUserIdAsync(int userId)
         {
             return await _context.Tickets
                                  .Where(t => t.CreatedByUserId == userId || t.AssignedToUserId == userId)
@@ -49,14 +49,14 @@ namespace TicketSystem.Infrastructure.Data.Repositories
         }
 
         // Yeni bir ticket ekler ve değişiklikleri veritabanına kaydeder.
-        public async Task AddAsync(Ticket ticket)
+        public async Task AddAsync(TicketDto ticket)
         {
             await _context.Tickets.AddAsync(ticket);
             await _context.SaveChangesAsync();
         }
 
         // Mevcut bir ticket'ın bilgilerini günceller.
-        public async Task UpdateAsync(Ticket ticket)
+        public async Task UpdateAsync(TicketDto ticket)
         {
             _context.Tickets.Update(ticket);
             await _context.SaveChangesAsync();

@@ -32,7 +32,7 @@ namespace TicketSystem.API.Controllers
 
         // POST: api/tickets
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Ticket ticket)
+        public async Task<IActionResult> Create([FromBody] TicketDto ticket)
         {
             var createdTicket = await _ticketService.CreateTicketAsync(ticket);
             return CreatedAtAction(nameof(Get), new { id = createdTicket.TicketId }, createdTicket);
@@ -40,7 +40,7 @@ namespace TicketSystem.API.Controllers
 
         // PUT: api/tickets/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Ticket ticket)
+        public async Task<IActionResult> Update(int id, [FromBody] TicketDto ticket)
         {
             if (id != ticket.TicketId)
                 return BadRequest("Ticket ID mismatch.");

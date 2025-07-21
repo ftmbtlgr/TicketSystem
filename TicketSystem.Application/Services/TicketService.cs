@@ -20,19 +20,19 @@ namespace TicketSystem.Application.Services
         private readonly ICommentRepository _commentRepository = commentRepository; 
         private readonly IAttachmentRepository _attachmentRepository = attachmentRepository;
 
-        public async Task<Ticket?> GetTicketByIdAsync(int ticketId)
+        public async Task<TicketDto?> GetTicketByIdAsync(int ticketId)
         {
             // Ticket'ı getirirken yorum ve ekleri de dahil etmeye devam edebilirsiniz,
             // ancak CommentRepository veya AttachmentRepository üzerinden de yorum/ek getirebilirsiniz.
             return await _ticketRepository.GetByIdAsync(ticketId);
         }
 
-        public async Task<IEnumerable<Ticket>> GetAllTicketsAsync()
+        public async Task<IEnumerable<TicketDto>> GetAllTicketsAsync()
         {
             return await _ticketRepository.GetAllAsync();
         }
 
-        public async Task<IEnumerable<Ticket>> GetTicketsByUserIdAsync(int userId)
+        public async Task<IEnumerable<TicketDto>> GetTicketsByUserIdAsync(int userId)
         {
             if (!await _userRepository.ExistsAsync(userId))
             {
@@ -41,7 +41,7 @@ namespace TicketSystem.Application.Services
             return await _ticketRepository.GetTicketsByUserIdAsync(userId);
         }
 
-        public async Task<Ticket> CreateTicketAsync(Ticket ticket)
+        public async Task<TicketDto> CreateTicketAsync(TicketDto ticket)
         {
             if (!await _userRepository.ExistsAsync(ticket.CreatedByUserId))
             {
@@ -61,7 +61,7 @@ namespace TicketSystem.Application.Services
             return ticket;
         }
 
-        public async Task UpdateTicketAsync(Ticket ticket)
+        public async Task UpdateTicketAsync(TicketDto ticket)
         {
             var existingTicket = await _ticketRepository.GetByIdAsync(ticket.TicketId);
             if (existingTicket == null)
@@ -84,7 +84,7 @@ namespace TicketSystem.Application.Services
             {
                 throw new ApplicationException($"Ticket with ID {ticketId} not found.");
             }
-            // İş Kuralı: Ticket silindiğinde ilgili yorumları ve ekleri de silmek istiyorsanız
+            // Ticket silindiğinde ilgili yorumları ve ekleri de silmek istiyorsanız
             // Context'te Cascade Delete tanımladıysanız bu otomatik olur.
             // Aksi takdirde, burada manuel olarak CommentRepository ve AttachmentRepository'yi kullanarak silebilirsiniz.
             await _ticketRepository.DeleteAsync(ticketId);
@@ -146,7 +146,7 @@ namespace TicketSystem.Application.Services
             }
         }
 
-        // YENİ METOT: Ek Dosya Ekleme
+        // Ek Dosya Ekleme
         public async Task AddAttachmentToTicketAsync(int ticketId, Attachment attachment)
         {
             if (!await _ticketRepository.ExistsAsync(ticketId))

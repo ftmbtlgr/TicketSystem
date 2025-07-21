@@ -20,7 +20,7 @@ namespace TicketSystem.Core.Entities
         [ForeignKey("User")]
         public int UserId { get; set; }
 
-        public Ticket Ticket { get; set; } = null!; 
+        public TicketDto Ticket { get; set; } = null!; 
         public User User { get; set; } = null!; 
     }
 }

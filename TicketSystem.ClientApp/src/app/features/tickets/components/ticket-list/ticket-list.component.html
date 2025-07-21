@@ -1,1 +1,32 @@
-<h2>list</h2>
+<div class="ticket-list-container">
+  <h2>Bilet Listesi</h2>
+
+  <div *ngIf="isLoading" class="loading-message">
+    <p>Biletler yükleniyor...</p>
+    <div class="spinner"></div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    <p>Hata: {{ errorMessage }}</p>
+    <button (click)="loadTickets()">Tekrar Dene</button>
+  </div>
+
+  <ng-container *ngIf="!isLoading"> <ng-container *ngIf="tickets$ | async as tickets"> <div *ngIf="tickets.length > 0; else noTickets">
+        <ul class="ticket-items">
+          <li *ngFor="let ticket of tickets" class="ticket-item">
+            <h3>{{ ticket.title }}</h3>
+            <p>{{ ticket.description }}</p>
+            <p>Durum: <strong>{{ ticket.status }}</strong></p>
+            <p>Oluşturulma Tarihi: {{ ticket.createdDate | date:'short' }}</p>
+          </li>
+        </ul>
+      </div>
+      <ng-template #noTickets>
+        <div class="no-tickets-message">
+          <p>Henüz hiç bilet bulunamadı. Yeni bir bilet oluşturabilirsiniz.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+
+</div>

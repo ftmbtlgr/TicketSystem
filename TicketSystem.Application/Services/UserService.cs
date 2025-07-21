@@ -31,13 +31,13 @@ namespace TicketSystem.Application.Services
 
         public async Task<User> RegisterUserAsync(User user, string password)
         {
-            // İş Kuralı: Kullanıcı adı zaten kullanımda mı?
+            // Kullanıcı adı zaten kullanımda mı?
             if (await _userRepository.UserExistsByUsernameAsync(user.Username))
             {
                 throw new ApplicationException($"Username '{user.Username}' already exists.");
             }
 
-            // Güvenlik: Şifreyi hash'le ve Salt oluştur
+            // Şifreyi hash'le ve Salt oluştur
             CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
 
             user.PasswordHash = passwordHash;
@@ -51,7 +51,7 @@ namespace TicketSystem.Application.Services
 
         public async Task UpdateUserAsync(User user)
         {
-            // İş Kuralı: Güncellenen kullanıcı adı başkası tarafından kullanılıyor mu?
+            // Güncellenen kullanıcı adı başkası tarafından kullanılıyor mu?
             var existingUser = await _userRepository.GetByUsernameAsync(user.Username);
             if (existingUser != null && existingUser.UserId != user.UserId)
             {
@@ -63,7 +63,7 @@ namespace TicketSystem.Application.Services
 
         public async Task DeleteUserAsync(int userId)
         {
-            // İş Kuralı: Kullanıcı mevcut mu?
+            // Kullanıcı mevcut mu?
             if (!await _userRepository.ExistsAsync(userId))
             {
                 throw new ApplicationException($"User with ID {userId} not found.");
@@ -88,14 +88,12 @@ namespace TicketSystem.Application.Services
             return await _userRepository.UserExistsByUsernameAsync(username);
         }
 
-        // --- Helper Metotlar ---
+        //  Yardımcı Metotlar
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
-            using (var hmac = new HMACSHA512())
-            {
-                passwordSalt = hmac.Key;
-                passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-            }
+            using var hmac = new HMACSHA512();
+            passwordSalt = hmac.Key;
+            passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
         }
 
         private bool VerifyPasswordHash(string password, byte[] storedHash, byte[] storedSalt)

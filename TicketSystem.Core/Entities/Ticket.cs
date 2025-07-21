@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace TicketSystem.Core.Entities
 {
-    public class Ticket
+    public class TicketDto
     {
         [Key]
         public int TicketId { get; set; } 

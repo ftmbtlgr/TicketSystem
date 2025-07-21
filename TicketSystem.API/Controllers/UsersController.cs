@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using TicketSystem.API.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 
@@ -7,14 +8,9 @@ namespace TicketSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UsersController : ControllerBase
+    public class UsersController(IUserService userService) : ControllerBase
     {
-        private readonly IUserService _userService;
-
-        public UsersController(IUserService userService)
-        {
-            _userService = userService;
-        }
+        private readonly IUserService _userService = userService;
 
         // GET: api/users
         [HttpGet]
@@ -44,7 +40,7 @@ namespace TicketSystem.API.Controllers
 
         // POST: api/users/register
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] UserRegisterDto request)
         {
             var user = new User
             {
@@ -52,7 +48,7 @@ namespace TicketSystem.API.Controllers
                 Email = request.Email,
                 FirstName = request.FirstName,
                 LastName = request.LastName,
-                Role = request.Role ?? "User"
+                Role = "User"
             };
 
             var createdUser = await _userService.RegisterUserAsync(user, request.Password);
@@ -87,18 +83,6 @@ namespace TicketSystem.API.Controllers
             return NoContent();
         }
     }
-
-    // DTOs
-    public class RegisterRequest
-    {
-        public string Username { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
-        public string Password { get; set; } = null!;
-        public string? Role { get; set; }
-    }
-
     public class LoginRequest
     {
         public string Username { get; set; } = null!;

@@ -14,20 +14,20 @@ namespace TicketSystem.Infrastructure.Data
 
         // Veritabanı tablolarınızı temsil eden DbSet'ler
         public DbSet<User> Users { get; set; }
-        public DbSet<Ticket> Tickets { get; set; }
+        public DbSet<TicketDto> Tickets { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Kullanıcı ile Ticket arasındaki ilişkileri açıkça belirtme
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<TicketDto>()
                 .HasOne(t => t.CreatedByUser)
                 .WithMany(u => u.CreatedTickets)
                 .HasForeignKey(t => t.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict); // Ticket silindiğinde yaratıcısı silinmesin
 
-            modelBuilder.Entity<Ticket>()
+            modelBuilder.Entity<TicketDto>()
                 .HasOne(t => t.AssignedToUser)
                 .WithMany(u => u.AssignedTickets)
                 .HasForeignKey(t => t.AssignedToUserId)

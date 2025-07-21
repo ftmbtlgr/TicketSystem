@@ -5,11 +5,12 @@ import { HttpClient } from '@angular/common/http';
 import { Ticket } from './shared/models/ticket';
 import { Pagination } from './shared/models/pagination';
 import { environment } from '../../environments/environment';
+import { TicketListComponent } from "./features/tickets/components/ticket-list/ticket-list.component";
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, HeaderComponent],
+  imports: [RouterOutlet, HeaderComponent, TicketListComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

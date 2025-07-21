@@ -1,5 +1,5 @@
 export const environment = {
-    production: true,
+    production: false,
     apiUrl: 'https://localhost:5001/api/',
     apiTimeout: 30000, // 30 seconds
     enableDebug: true,

@@ -8,14 +8,9 @@ namespace TicketSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class CommentsController : ControllerBase
+    public class CommentsController(ICommentService commentService) : ControllerBase
     {
-        private readonly ICommentService _commentService;
-
-        public CommentsController(ICommentService commentService)
-        {
-            _commentService = commentService;
-        }
+        private readonly ICommentService _commentService = commentService;
 
         // GET: api/comments/{id}
         [HttpGet("{id}")]

@@ -1,7 +1,7 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Input } from '@angular/core';
 import { Ticket } from '../../../../shared/models/ticket';
 import { TicketService } from '../../ticket.service';
-import { Observable, Subscription } from 'rxjs';
+import { catchError, finalize, Observable, of, map } from 'rxjs';
 import { Pagination } from '../../../../shared/models/pagination';
 import { PageEvent } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
@@ -28,15 +28,37 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './ticket-list.component.scss',
 })
 export class TicketListComponent implements OnInit {
-  tickets: Ticket[] = [];
+  tickets$: Observable<Ticket[]> | null = null;
+  isLoading: boolean = true;
+  errorMessage: string | null = null;
 
   constructor(private ticketService: TicketService) {}
 
   ngOnInit(): void {
-    this.ticketService.getTickets().subscribe({
+    /*this.ticketService.getTickets().subscribe({
       next: (res: Pagination<Ticket>) => {
         this.tickets = res.data;
       },
-    });
+    }); */
+    this.loadTickets();
+  }
+  loadTickets(): void {
+    this.isLoading = true; // Yüklemeyi başlat
+    this.errorMessage = null; // Önceki hataları temizle
+
+    this.tickets$ = this.ticketService.getTickets().pipe(
+      map(response => response.data),
+      catchError((error) => {
+        // Hata yakalandığında
+        this.errorMessage =
+          error.message || 'Biletler yüklenirken bir hata oluştu.';
+        this.isLoading = false; // Yüklemeyi durdur
+        return of([]); // Hata durumunda boş bir Observable döndürerek akışı sonlandır
+      }),
+      finalize(() => {
+        // İşlem tamamlandığında (başarılı veya hatalı)
+        this.isLoading = false;
+      })
+    );
   }
 }

@@ -23,7 +23,8 @@ namespace TicketSystem.Core.Entities
         public int UploadedByUserId { get; set; }
 
         // Navigasyon Özellikleri
-        public Ticket Ticket { get; set; } = null!; 
+        public TicketDto Ticket { get; set; } = null!; 
         public User UploadedByUser { get; set; } = null!; 
     }
 }
+ 

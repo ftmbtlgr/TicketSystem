@@ -8,7 +8,8 @@ import { Router } from '@angular/router';
   selector: 'app-ticket-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './ticket-form.component.html'
+  templateUrl: './ticket-form.component.html',
+  styleUrls: ['./ticket-form.component.scss']
 })
 export class TicketFormComponent {
   ticketForm: FormGroup;

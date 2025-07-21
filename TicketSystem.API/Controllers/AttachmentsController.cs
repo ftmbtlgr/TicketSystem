@@ -8,14 +8,9 @@ namespace TicketSystem.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class AttachmentsController : ControllerBase
+    public class AttachmentsController(IAttachmentService attachmentService) : ControllerBase
     {
-        private readonly IAttachmentService _attachmentService;
-
-        public AttachmentsController(IAttachmentService attachmentService)
-        {
-            _attachmentService = attachmentService;
-        }
+        private readonly IAttachmentService _attachmentService = attachmentService;
 
         // GET: api/attachments/{id}
         [HttpGet("{id}")]

@@ -1,14 +1,5 @@
 <app-header></app-header>
 
-<div class="container mt-6">
-    <h2 class="text-3xl font-bold underline">{{title}}</h2>
-    <ul>
-        @for (ticket of tickets; track ticket.ticketId) {
-            <li>{{ticket.title}}</li>
-        }
-    </ul>
-</div>
-
-
+<app-ticket-list></app-ticket-list>
 
 <router-outlet></router-outlet>
