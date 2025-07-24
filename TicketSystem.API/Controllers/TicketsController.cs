@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
+using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
-using TicketSystem.Core.Entities;
 
-namespace TicketSystem.API.Controllers
+namespace TicketSystem.Application.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -23,78 +23,223 @@ namespace TicketSystem.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var ticket = await _ticketService.GetTicketByIdAsync(id);
-            if (ticket == null)
-                return NotFound();
+            try
+            {
+                var ticket = await _ticketService.GetTicketByIdAsync(id);
+                if (ticket == null)
+                    return NotFound($"ID'si {id} olan bilet bulunamadı.");
 
-            return Ok(ticket);
+                return Ok(ticket);
+            }
+            catch (ApplicationException ex)
+            {
+                return StatusCode(500, new { message = "Bilet getirilirken bir hata oluştu: " + ex.Message });
+            }
         }
 
         // POST: api/tickets
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] TicketDto ticket)
+        public async Task<IActionResult> Create([FromBody] TicketDto ticketDto)
         {
-            var createdTicket = await _ticketService.CreateTicketAsync(ticket);
-            return CreatedAtAction(nameof(Get), new { id = createdTicket.TicketId }, createdTicket);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var createdTicket = await _ticketService.CreateTicketAsync(ticketDto);
+                return CreatedAtAction(nameof(Get), new { id = createdTicket.TicketId }, createdTicket);
+            }
+            catch (ApplicationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Bilet oluşturulurken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // PUT: api/tickets/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] TicketDto ticket)
+        public async Task<IActionResult> Update(int id, [FromBody] TicketDto ticketDto)
         {
-            if (id != ticket.TicketId)
-                return BadRequest("Ticket ID mismatch.");
+            if (id != ticketDto.TicketId)
+                return BadRequest("Bilet ID uyuşmazlığı. URL'deki ID ile gönderilen biletin ID'si farklı.");
 
-            await _ticketService.UpdateTicketAsync(ticket);
-            return NoContent();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _ticketService.UpdateTicketAsync(ticketDto);
+                return NoContent(); 
+            }
+            catch (ApplicationException ex)
+            {
+                if (ex.Message.Contains("bulunamadı"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Bilet güncellenirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // DELETE: api/tickets/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            await _ticketService.DeleteTicketAsync(id);
-            return NoContent();
+            try
+            {
+                await _ticketService.DeleteTicketAsync(id);
+                return NoContent(); // 204 NoContent
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Bilet silinirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // PATCH: api/tickets/{id}/status ticket status degisikligi
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ChangeStatus(int id, [FromQuery] string newStatus, [FromQuery] int? userId)
         {
-            await _ticketService.ChangeTicketStatusAsync(id, newStatus, userId);
-            return NoContent();
+            if (string.IsNullOrEmpty(newStatus))
+            {
+                return BadRequest("Yeni durum boş olamaz.");
+            }
+
+            try
+            {
+                await _ticketService.ChangeTicketStatusAsync(id, newStatus, userId);
+                return NoContent();
+            }
+            catch (ApplicationException ex)
+            {
+                if (ex.Message.Contains("bulunamadı"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Bilet durumu değiştirilirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
-        // PATCH: api/tickets/{id}/assign ticket'ı kullanıcıya assign etme
+        // PATCH: api/tickets/{id}/assign 
         [HttpPatch("{id}/assign")]
         public async Task<IActionResult> AssignTicket(int id, [FromQuery] int assignedToUserId, [FromQuery] int? userId)
         {
-            await _ticketService.AssignTicketAsync(id, assignedToUserId, userId);
-            return NoContent();
+            if (assignedToUserId <= 0) 
+            {
+                return BadRequest("Atanacak kullanıcı ID'si geçerli değil.");
+            }
+
+            try
+            {
+                await _ticketService.AssignTicketAsync(id, assignedToUserId, userId);
+                return NoContent();
+            }
+            catch (ApplicationException ex)
+            {
+                if (ex.Message.Contains("bulunamadı"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Bilet atanırken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // POST: api/tickets/{ticketId}/comments
         [HttpPost("{ticketId}/comments")]
-        public async Task<IActionResult> AddComment(int ticketId, [FromBody] Comment comment)
+        public async Task<IActionResult> AddComment(int ticketId, [FromBody] CommentDto commentDto)
         {
-            await _ticketService.AddCommentToTicketAsync(ticketId, comment);
-            return Ok(comment);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _ticketService.AddCommentToTicketAsync(ticketId, commentDto);
+                return Ok(new { message = "Yorum başarıyla eklendi.", comment = commentDto });
+            }
+            catch (ApplicationException ex)
+            {
+                if (ex.Message.Contains("bulunamadı"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Yorum eklenirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // POST: api/tickets/{ticketId}/attachments
         [HttpPost("{ticketId}/attachments")]
-        public async Task<IActionResult> AddAttachment(int ticketId, [FromBody] Attachment attachment)
+        public async Task<IActionResult> AddAttachment(int ticketId, [FromBody] AttachmentDto attachmentDto)
         {
-            await _ticketService.AddAttachmentToTicketAsync(ticketId, attachment);
-            return Ok(attachment);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                await _ticketService.AddAttachmentToTicketAsync(ticketId, attachmentDto);
+                return Ok(new { message = "Ek başarıyla eklendi.", attachment = attachmentDto }); 
+            }
+            catch (ApplicationException ex)
+            {
+                if (ex.Message.Contains("bulunamadı"))
+                {
+                    return NotFound(new { message = ex.Message });
+                }
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Ek eklenirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
 
         // GET: api/tickets/user/{userId}
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetByUserId(int userId)
         {
-            var tickets = await _ticketService.GetTicketsByUserIdAsync(userId);
-            return Ok(tickets);
+            try
+            {
+                var tickets = await _ticketService.GetTicketsByUserIdAsync(userId);
+                return Ok(tickets);
+            }
+            catch (ApplicationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Kullanıcıya ait biletler getirilirken beklenmeyen bir hata oluştu: " + ex.Message });
+            }
         }
     }
 }

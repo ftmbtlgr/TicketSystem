@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 using TicketSystem.Core.Interfaces;
+using Mapster;
 
 namespace TicketSystem.Application.Services
 {
@@ -13,80 +10,82 @@ namespace TicketSystem.Application.Services
         ITicketRepository ticketRepository,
         IUserRepository userRepository,
         ICommentRepository commentRepository,
-        IAttachmentRepository attachmentRepository) : ITicketService
+        IAttachmentRepository attachmentRepository) : ITicketService 
     {
         private readonly ITicketRepository _ticketRepository = ticketRepository;
         private readonly IUserRepository _userRepository = userRepository;
-        private readonly ICommentRepository _commentRepository = commentRepository; 
+        private readonly ICommentRepository _commentRepository = commentRepository;
         private readonly IAttachmentRepository _attachmentRepository = attachmentRepository;
 
         public async Task<TicketDto?> GetTicketByIdAsync(int ticketId)
         {
-            // Ticket'ı getirirken yorum ve ekleri de dahil etmeye devam edebilirsiniz,
-            // ancak CommentRepository veya AttachmentRepository üzerinden de yorum/ek getirebilirsiniz.
-            return await _ticketRepository.GetByIdAsync(ticketId);
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+            return ticket?.Adapt<TicketDto>();
         }
 
         public async Task<IEnumerable<TicketDto>> GetAllTicketsAsync()
         {
-            return await _ticketRepository.GetAllAsync();
+            var tickets = await _ticketRepository.GetAllAsync();
+            return tickets.Adapt<List<TicketDto>>(); 
         }
 
         public async Task<IEnumerable<TicketDto>> GetTicketsByUserIdAsync(int userId)
         {
             if (!await _userRepository.ExistsAsync(userId))
             {
-                throw new ApplicationException($"User with ID {userId} not found.");
+                throw new ApplicationException($"ID'si {userId} olan kullanıcı bulunamadı.");
             }
-            return await _ticketRepository.GetTicketsByUserIdAsync(userId);
+            var tickets = await _ticketRepository.GetTicketsByUserIdAsync(userId);
+            return tickets.Adapt<List<TicketDto>>(); 
         }
 
-        public async Task<TicketDto> CreateTicketAsync(TicketDto ticket)
+        public async Task<TicketDto> CreateTicketAsync(TicketDto ticketDto) 
         {
-            if (!await _userRepository.ExistsAsync(ticket.CreatedByUserId))
+            if (!await _userRepository.ExistsAsync(ticketDto.CreatedByUserId))
             {
-                throw new ApplicationException($"Creator user with ID {ticket.CreatedByUserId} not found.");
+                throw new ApplicationException($"Oluşturan kullanıcının ID'si {ticketDto.CreatedByUserId} bulunamadı.");
             }
 
-            if (ticket.AssignedToUserId.HasValue && !await _userRepository.ExistsAsync(ticket.AssignedToUserId.Value))
+            if (ticketDto.AssignedToUserId.HasValue && !await _userRepository.ExistsAsync(ticketDto.AssignedToUserId.Value))
             {
-                throw new ApplicationException($"Assigned user with ID {ticket.AssignedToUserId.Value} not found.");
+                throw new ApplicationException($"Atanan kullanıcının ID'si {ticketDto.AssignedToUserId.Value} bulunamadı.");
             }
+
+            var ticket = ticketDto.Adapt<Ticket>(); 
 
             ticket.CreatedDate = DateTime.UtcNow;
             ticket.LastUpdatedDate = DateTime.UtcNow;
-            ticket.Status = ticket.Status ?? "Open";
+            ticket.Status = ticket.Status ?? "Open"; 
 
             await _ticketRepository.AddAsync(ticket);
-            return ticket;
+            return ticket.Adapt<TicketDto>(); 
         }
 
-        public async Task UpdateTicketAsync(TicketDto ticket)
+        public async Task UpdateTicketAsync(TicketDto ticketDto)
         {
-            var existingTicket = await _ticketRepository.GetByIdAsync(ticket.TicketId);
+            var existingTicket = await _ticketRepository.GetByIdAsync(ticketDto.TicketId);
             if (existingTicket == null)
             {
-                throw new ApplicationException($"Ticket with ID {ticket.TicketId} not found.");
+                throw new ApplicationException($"ID'si {ticketDto.TicketId} olan bilet bulunamadı.");
             }
 
-            if (ticket.AssignedToUserId.HasValue && !await _userRepository.ExistsAsync(ticket.AssignedToUserId.Value))
+            if (ticketDto.AssignedToUserId.HasValue && !await _userRepository.ExistsAsync(ticketDto.AssignedToUserId.Value))
             {
-                throw new ApplicationException($"Assigned user with ID {ticket.AssignedToUserId.Value} not found.");
+                throw new ApplicationException($"Atanan kullanıcının ID'si {ticketDto.AssignedToUserId.Value} bulunamadı.");
             }
 
-            ticket.LastUpdatedDate = DateTime.UtcNow;
-            await _ticketRepository.UpdateAsync(ticket);
+            ticketDto.Adapt(existingTicket);
+
+            existingTicket.LastUpdatedDate = DateTime.UtcNow;
+            await _ticketRepository.UpdateAsync(existingTicket);
         }
 
         public async Task DeleteTicketAsync(int ticketId)
         {
             if (!await _ticketRepository.ExistsAsync(ticketId))
             {
-                throw new ApplicationException($"Ticket with ID {ticketId} not found.");
+                throw new ApplicationException($"ID'si {ticketId} olan bilet bulunamadı.");
             }
-            // Ticket silindiğinde ilgili yorumları ve ekleri de silmek istiyorsanız
-            // Context'te Cascade Delete tanımladıysanız bu otomatik olur.
-            // Aksi takdirde, burada manuel olarak CommentRepository ve AttachmentRepository'yi kullanarak silebilirsiniz.
             await _ticketRepository.DeleteAsync(ticketId);
         }
 
@@ -95,9 +94,8 @@ namespace TicketSystem.Application.Services
             var ticket = await _ticketRepository.GetByIdAsync(ticketId);
             if (ticket == null)
             {
-                throw new ApplicationException($"Ticket with ID {ticketId} not found.");
+                throw new ApplicationException($"ID'si {ticketId} olan bilet bulunamadı.");
             }
-            // Yetkilendirme ve durum geçiş kuralları buraya gelecek
             ticket.Status = newStatus;
             ticket.LastUpdatedDate = DateTime.UtcNow;
             await _ticketRepository.UpdateAsync(ticket);
@@ -108,37 +106,35 @@ namespace TicketSystem.Application.Services
             var ticket = await _ticketRepository.GetByIdAsync(ticketId);
             if (ticket == null)
             {
-                throw new ApplicationException($"Ticket with ID {ticketId} not found.");
+                throw new ApplicationException($"ID'si {ticketId} olan bilet bulunamadı.");
             }
             if (!await _userRepository.ExistsAsync(assignedToUserId))
             {
-                throw new ApplicationException($"Assigned user with ID {assignedToUserId} not found.");
+                throw new ApplicationException($"Atanan kullanıcının ID'si {assignedToUserId} bulunamadı.");
             }
-            // Yetkilendirme kuralları buraya gelecek
             ticket.AssignedToUserId = assignedToUserId;
             ticket.LastUpdatedDate = DateTime.UtcNow;
             await _ticketRepository.UpdateAsync(ticket);
         }
 
-        // YORUM EKLEME METODU ARTIK CommentRepository'yi KULLANACAK
-        public async Task AddCommentToTicketAsync(int ticketId, Comment comment)
+        public async Task AddCommentToTicketAsync(int ticketId, CommentDto commentDto) 
         {
             if (!await _ticketRepository.ExistsAsync(ticketId))
             {
-                throw new ApplicationException($"Ticket with ID {ticketId} not found.");
+                throw new ApplicationException($"ID'si {ticketId} olan bilet bulunamadı.");
             }
-            if (!await _userRepository.ExistsAsync(comment.UserId))
+            if (!await _userRepository.ExistsAsync(commentDto.UserId))
             {
-                throw new ApplicationException($"Comment user with ID {comment.UserId} not found.");
+                throw new ApplicationException($"Yorum yapan kullanıcının ID'si {commentDto.UserId} bulunamadı.");
             }
 
-            comment.TicketId = ticketId; // Yorumu ilgili ticket'a bağla
+            var comment = commentDto.Adapt<Comment>(); 
+            comment.TicketId = ticketId;
             comment.CommentDate = DateTime.UtcNow;
 
-            await _commentRepository.AddAsync(comment); // CommentRepository aracılığıyla ekle
+            await _commentRepository.AddAsync(comment);
 
-            // Ticket'ın LastUpdatedDate'ini güncelleyebiliriz, çünkü yeni bir yorum geldi
-            var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId); 
             if (ticket != null)
             {
                 ticket.LastUpdatedDate = DateTime.UtcNow;
@@ -146,21 +142,19 @@ namespace TicketSystem.Application.Services
             }
         }
 
-        // Ek Dosya Ekleme
-        public async Task AddAttachmentToTicketAsync(int ticketId, Attachment attachment)
+        public async Task AddAttachmentToTicketAsync(int ticketId, AttachmentDto attachmentDto) 
         {
             if (!await _ticketRepository.ExistsAsync(ticketId))
             {
-                throw new ApplicationException($"Ticket with ID {ticketId} not found.");
+                throw new ApplicationException($"ID'si {ticketId} olan bilet bulunamadı.");
             }
-            // Dosya yolu, boyutu vs. gibi validasyonlar burada yapılabilir
 
-            attachment.TicketId = ticketId; // Eki ilgili ticket'a bağla
+            var attachment = attachmentDto.Adapt<Attachment>();
+            attachment.TicketId = ticketId;
             attachment.UploadDate = DateTime.UtcNow;
 
-            await _attachmentRepository.AddAsync(attachment); // AttachmentRepository aracılığıyla ekle
+            await _attachmentRepository.AddAsync(attachment);
 
-            // Ticket'ın LastUpdatedDate'ini güncelleyebiliriz, çünkü yeni bir ek geldi
             var ticket = await _ticketRepository.GetByIdAsync(ticketId);
             if (ticket != null)
             {

@@ -11,23 +11,20 @@ namespace TicketSystem.Infrastructure.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
     {
-
-        // Veritabanı tablolarınızı temsil eden DbSet'ler
         public DbSet<User> Users { get; set; }
-        public DbSet<TicketDto> Tickets { get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Attachment> Attachments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Kullanıcı ile Ticket arasındaki ilişkileri açıkça belirtme
-            modelBuilder.Entity<TicketDto>()
+            modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.CreatedByUser)
                 .WithMany(u => u.CreatedTickets)
                 .HasForeignKey(t => t.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict); // Ticket silindiğinde yaratıcısı silinmesin
+                .OnDelete(DeleteBehavior.Restrict); 
 
-            modelBuilder.Entity<TicketDto>()
+            modelBuilder.Entity<Ticket>()
                 .HasOne(t => t.AssignedToUser)
                 .WithMany(u => u.AssignedTickets)
                 .HasForeignKey(t => t.AssignedToUserId)
@@ -52,7 +49,7 @@ namespace TicketSystem.Infrastructure.Data
 
             modelBuilder.Entity<Attachment>()
                 .HasOne(a => a.UploadedByUser)
-                .WithMany() // Bu ilişki için User modelinde spesifik bir ICollection tanımlamadık
+                .WithMany() 
                 .HasForeignKey(a => a.UploadedByUserId);
 
             base.OnModelCreating(modelBuilder);

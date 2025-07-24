@@ -22,7 +22,7 @@ namespace TicketSystem.Infrastructure.Data.Repositories
         {
             return await _context.Attachments
                                  .Where(a => a.TicketId == ticketId)
-                                 .OrderBy(a => a.UploadDate) // Ekleri tarihe göre sırala
+                                 .OrderBy(a => a.UploadDate) 
                                  .ToListAsync();
         }
 

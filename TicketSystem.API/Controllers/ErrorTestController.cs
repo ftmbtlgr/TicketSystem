@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TicketSystem.Core.Entities;
-using TicketSystem.API.DTOs;
+using TicketSystem.Application.DTOs;
 
-namespace TicketSystem.API.Controllers
+namespace TicketSystem.Application.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -35,7 +35,7 @@ namespace TicketSystem.API.Controllers
         }
 
         [HttpPost("validationerror")]   // 400  
-        public IActionResult GetValidationError([FromBody] UserRegisterDto ticket)
+        public IActionResult GetValidationError([FromBody] UserDto ticket)
         {
             if (ticket is null)
             {

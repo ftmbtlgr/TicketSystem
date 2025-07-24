@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 
-namespace TicketSystem.API.Controllers
+namespace TicketSystem.Application.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -33,14 +34,14 @@ namespace TicketSystem.API.Controllers
 
         // POST: api/attachments
         [HttpPost]
-        public async Task<IActionResult> AddAttachment([FromBody] Attachment attachment)
+        public async Task<IActionResult> AddAttachment([FromBody] AttachmentDto attachmentDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                var createdAttachment = await _attachmentService.AddAttachmentAsync(attachment);
+                var createdAttachment = await _attachmentService.AddAttachmentAsync(attachmentDto);
                 return CreatedAtAction(nameof(GetAttachmentById), new { id = createdAttachment.AttachmentId }, createdAttachment);
             }
             catch (ApplicationException ex)
@@ -51,9 +52,9 @@ namespace TicketSystem.API.Controllers
 
         // PUT: api/attachments/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAttachment(int id, [FromBody] Attachment attachment)
+        public async Task<IActionResult> UpdateAttachment(int id, [FromBody] AttachmentDto attachmentDto)
         {
-            if (id != attachment.AttachmentId)
+            if (id != attachmentDto.AttachmentId)
                 return BadRequest("Attachment ID mismatch.");
 
             if (!ModelState.IsValid)
@@ -61,7 +62,7 @@ namespace TicketSystem.API.Controllers
 
             try
             {
-                await _attachmentService.UpdateAttachmentAsync(attachment);
+                await _attachmentService.UpdateAttachmentAsync(attachmentDto);
             }
             catch (ApplicationException ex)
             {

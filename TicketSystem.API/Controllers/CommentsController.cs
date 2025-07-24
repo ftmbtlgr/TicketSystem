@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 
-namespace TicketSystem.API.Controllers
+namespace TicketSystem.Application.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -33,20 +34,20 @@ namespace TicketSystem.API.Controllers
 
         // POST: api/comments
         [HttpPost]
-        public async Task<IActionResult> AddComment([FromBody] Comment comment)
+        public async Task<IActionResult> AddComment([FromBody] CommentDto commentDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var createdComment = await _commentService.AddCommentAsync(comment);
+            var createdComment = await _commentService.AddCommentAsync(commentDto);
             return CreatedAtAction(nameof(GetCommentById), new { id = createdComment.CommentId }, createdComment);
         }
 
         // PUT: api/comments/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateComment(int id, [FromBody] Comment comment)
+        public async Task<IActionResult> UpdateComment(int id, [FromBody] CommentDto commentDto)
         {
-            if (id != comment.CommentId)
+            if (id != commentDto.CommentId)
                 return BadRequest("Comment ID mismatch.");
 
             if (!ModelState.IsValid)
@@ -54,7 +55,7 @@ namespace TicketSystem.API.Controllers
 
             try
             {
-                await _commentService.UpdateCommentAsync(comment);
+                await _commentService.UpdateCommentAsync(commentDto);
             }
             catch (ApplicationException ex)
             {

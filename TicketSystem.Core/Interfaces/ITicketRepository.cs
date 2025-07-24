@@ -9,11 +9,11 @@ namespace TicketSystem.Core.Interfaces
 {
     public interface ITicketRepository
     {
-        Task<TicketDto?> GetByIdAsync(int id);
-        Task<IEnumerable<TicketDto>> GetAllAsync();
-        Task<IEnumerable<TicketDto>> GetTicketsByUserIdAsync(int userId); // Belirli bir kullanıcının ticket'ları
-        Task AddAsync(TicketDto ticket);
-        Task UpdateAsync(TicketDto ticket);
+        Task<Ticket?> GetByIdAsync(int id);
+        Task<IEnumerable<Ticket>> GetAllAsync();
+        Task<IEnumerable<Ticket>> GetTicketsByUserIdAsync(int userId);
+        Task AddAsync(Ticket ticket);
+        Task UpdateAsync(Ticket ticket);
         Task DeleteAsync(int id);
         Task<bool> ExistsAsync(int id);
     }

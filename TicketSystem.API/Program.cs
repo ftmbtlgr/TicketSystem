@@ -12,6 +12,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
+
 // Repository'leri baðýmlýlýk enjeksiyonu için kaydet
 // AddScoped kullanýldý. Her HTTP isteði için yeni bir instance oluþturur.
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -22,6 +23,9 @@ builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 //Uygulama Servislerini baðýmlýlýk için kaydetme
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+
 
 // Diðer servis eklemeleriniz...
 builder.Services.AddControllers();

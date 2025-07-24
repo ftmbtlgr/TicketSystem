@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 using TicketSystem.Core.Interfaces;
+using Mapster;
 
 namespace TicketSystem.Application.Services
 {
@@ -14,73 +12,110 @@ namespace TicketSystem.Application.Services
     {
         private readonly IUserRepository _userRepository = userRepository;
 
-        public async Task<User?> GetUserByIdAsync(int userId)
+        public async Task<UserDto?> GetUserByIdAsync(int userId)
         {
-            return await _userRepository.GetByIdAsync(userId);
+            var userEntity = await _userRepository.GetByIdAsync(userId);
+            // Maplerken Password ve ConfirmPassword alanları otomatik atlanacaktır (Entity'de karşılıkları yok).
+            return userEntity?.Adapt<UserDto>();
         }
 
-        public async Task<User?> GetUserByUsernameAsync(string username)
+        public async Task<UserDto?> GetUserByUsernameAsync(string username)
         {
-            return await _userRepository.GetByUsernameAsync(username);
+            var userEntity = await _userRepository.GetByUsernameAsync(username);
+            return userEntity?.Adapt<UserDto>();
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
         {
-            return await _userRepository.GetAllAsync();
+            var userEntities = await _userRepository.GetAllAsync();
+            return userEntities.Adapt<List<UserDto>>();
         }
 
-        public async Task<User> RegisterUserAsync(User user, string password)
+        // Yeni kullanıcı kaydı
+        public async Task<UserRegisterDto> RegisterUserAsync(UserRegisterDto userRegisterDto) 
         {
-            // Kullanıcı adı zaten kullanımda mı?
-            if (await _userRepository.UserExistsByUsernameAsync(user.Username))
+            if (await _userRepository.UserExistsByUsernameAsync(userRegisterDto.Username))
             {
-                throw new ApplicationException($"Username '{user.Username}' already exists.");
+                throw new ApplicationException($"Kullanıcı adı '{userRegisterDto.Username}' zaten mevcut.");
             }
 
-            // Şifreyi hash'le ve Salt oluştur
-            CreatePasswordHash(password, out byte[] passwordHash, out byte[] passwordSalt);
-
-            user.PasswordHash = passwordHash;
-            user.PasswordSalt = passwordSalt;
-            user.RegistrationDate = DateTime.UtcNow; // Kayıt tarihi
-            user.Role = user.Role ?? "User"; // Varsayılan rol ataması
-
-            await _userRepository.AddAsync(user);
-            return user;
-        }
-
-        public async Task UpdateUserAsync(User user)
-        {
-            // Güncellenen kullanıcı adı başkası tarafından kullanılıyor mu?
-            var existingUser = await _userRepository.GetByUsernameAsync(user.Username);
-            if (existingUser != null && existingUser.UserId != user.UserId)
+            if (string.IsNullOrEmpty(userRegisterDto.Password))
             {
-                throw new ApplicationException($"Username '{user.Username}' is already taken by another user.");
+                throw new ArgumentException("Kayıt için şifre boş olamaz.");
             }
 
-            await _userRepository.UpdateAsync(user);
+            if (userRegisterDto.Password != userRegisterDto.ConfirmPassword)
+            {
+                throw new ApplicationException("Şifre ve tekrarı uyuşmuyor.");
+            }
+
+            CreatePasswordHash(userRegisterDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            // Mapster, UserDto'dan User entity'sine maplerken ConfirmPassword atlanacaktır.
+            // UserId, RegistrationDate, LastLoginDate gibi alanlar DTO'dan gelmeyebilir veya servis tarafından set edilebilir.
+            var newUserEntity = userRegisterDto.Adapt<User>();
+
+            newUserEntity.PasswordHash = passwordHash;
+            newUserEntity.PasswordSalt = passwordSalt;
+            newUserEntity.RegistrationDate = DateTime.UtcNow;
+            newUserEntity.Role ??= "User"; 
+            newUserEntity.IsActive = true;
+
+            await _userRepository.AddAsync(newUserEntity);
+            // Kaydedilen entity'yi tekrar UserDto'ya çevirip döndür (şifre bilgisi içermeden)
+
+            return newUserEntity.Adapt<UserRegisterDto>();
+        }
+
+        // Kullanıcı güncelleme - UserDto alıyor
+        public async Task UpdateUserAsync(UserDto userDto)
+        {
+            var existingUserEntity = await _userRepository.GetByIdAsync(userDto.UserId);
+            if (existingUserEntity == null)
+            {
+                throw new ApplicationException($"ID'si {userDto.UserId} olan kullanıcı güncelleme için bulunamadı.");
+            }
+
+            var userWithSameUsername = await _userRepository.GetByUsernameAsync(userDto.Username);
+            if (userWithSameUsername != null && userWithSameUsername.UserId != userDto.UserId)
+            {
+                throw new ApplicationException($"Kullanıcı adı '{userDto.Username}' başka bir kullanıcı tarafından alınmış.");
+            }
+
+            // Mapster ile DTO'daki güncellenebilir alanları mevcut entity üzerine map'leme
+            // Mapster, UserDto'daki Password ve ConfirmPassword alanlarını (User entity'sinde karşılığı olmadığı için)
+            // otomatik olarak atlayacaktır. Bu, istenen davranıştır.
+            userDto.Adapt(existingUserEntity);
+
+            // Şifre güncelleme: Eğer DTO'da yeni bir şifre sağlandıysa, onu da güncelle
+            // Password alanı nullable olduğundan, sadece null değilse şifre güncellenir.
+            if (!string.IsNullOrEmpty(userDto.Password))
+            {
+                CreatePasswordHash(userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+                existingUserEntity.PasswordHash = passwordHash;
+                existingUserEntity.PasswordSalt = passwordSalt;
+            }
+
+            await _userRepository.UpdateAsync(existingUserEntity);
         }
 
         public async Task DeleteUserAsync(int userId)
         {
-            // Kullanıcı mevcut mu?
             if (!await _userRepository.ExistsAsync(userId))
             {
-                throw new ApplicationException($"User with ID {userId} not found.");
+                throw new ApplicationException($"ID'si {userId} olan kullanıcı bulunamadı.");
             }
             await _userRepository.DeleteAsync(userId);
         }
 
         public async Task<bool> ValidateCredentialsAsync(string username, string password)
         {
-            var user = await _userRepository.GetByUsernameAsync(username);
-            if (user == null || user.PasswordHash == null || user.PasswordSalt == null)
+            var userEntity = await _userRepository.GetByUsernameAsync(username);
+            if (userEntity == null || userEntity.PasswordHash == null || userEntity.PasswordSalt == null)
             {
-                return false; // Kullanıcı bulunamadı veya şifre bilgileri eksik
+                return false;
             }
-
-            // Şifreyi doğrula
-            return VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt);
+            return VerifyPasswordHash(password, userEntity.PasswordHash, userEntity.PasswordSalt);
         }
 
         public async Task<bool> UserExistsByUsernameAsync(string username)
@@ -88,7 +123,6 @@ namespace TicketSystem.Application.Services
             return await _userRepository.UserExistsByUsernameAsync(username);
         }
 
-        //  Yardımcı Metotlar
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
         {
             using var hmac = new HMACSHA512();

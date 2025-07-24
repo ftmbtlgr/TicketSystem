@@ -1,4 +1,4 @@
-﻿namespace TicketSystem.API.DTOs
+﻿namespace TicketSystem.Application.DTOs
 {
     public class CommentDto
     {

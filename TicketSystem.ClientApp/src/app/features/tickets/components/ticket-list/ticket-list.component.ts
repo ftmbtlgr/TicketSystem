@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit, Input } from '@angular/core';
+// ticket-list.component.ts
+import { Component, OnInit } from '@angular/core';
 import { Ticket } from '../../../../shared/models/ticket';
 import { TicketService } from '../../ticket.service';
 import { catchError, finalize, Observable, of, map } from 'rxjs';
-import { Pagination } from '../../../../shared/models/pagination';
-import { PageEvent } from '@angular/material/paginator';
+// import { Pagination } from '../../../../shared/models/pagination'; // Artık buna ihtiyacınız olmayabilir
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -35,29 +35,24 @@ export class TicketListComponent implements OnInit {
   constructor(private ticketService: TicketService) {}
 
   ngOnInit(): void {
-    /*this.ticketService.getTickets().subscribe({
-      next: (res: Pagination<Ticket>) => {
-        this.tickets = res.data;
-      },
-    }); */
     this.loadTickets();
   }
-  loadTickets(): void {
-    this.isLoading = true; // Yüklemeyi başlat
-    this.errorMessage = null; // Önceki hataları temizle
 
-    this.tickets$ = this.ticketService.getTickets().pipe(
-      map(response => response.data),
+  loadTickets(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    this.tickets$ = this.ticketService.getAllTickets().pipe(
+      map((pagination: any) => pagination && pagination.items ? pagination.items : []),
       catchError((error) => {
-        // Hata yakalandığında
-        this.errorMessage =
-          error.message || 'Biletler yüklenirken bir hata oluştu.';
-        this.isLoading = false; // Yüklemeyi durdur
-        return of([]); // Hata durumunda boş bir Observable döndürerek akışı sonlandır
+        console.error('Biletler yüklenirken bir hata oluştu:', error);
+        this.errorMessage = error.message || 'Biletler yüklenirken bir hata oluştu.';
+        this.isLoading = false;
+        return of([]);
       }),
       finalize(() => {
-        // İşlem tamamlandığında (başarılı veya hatalı)
         this.isLoading = false;
+        console.log('Yükleme işlemi tamamlandı. isLoading:', this.isLoading);
       })
     );
   }

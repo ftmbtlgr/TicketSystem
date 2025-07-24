@@ -1,9 +1,12 @@
-import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Pagination } from '../../shared/models/pagination';
 import { Ticket } from '../../shared/models/ticket';
-import { Observable, forkJoin, throwError } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { Observable, catchError, forkJoin, throwError } from 'rxjs';
 
 import { environment } from '../../../../environments/environment';
 
@@ -11,41 +14,33 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class TicketService {
-  baseUrl = environment.apiUrl + 'tickets/';
+  baseUrl = environment.apiUrl;
   private http = inject(HttpClient);
-
-  getTickets() {
-    return this.http.get<Pagination<Ticket>>(this.baseUrl + 'tickets');
-  }
 
   createTicket(ticket: any) {
     return this.http.post(`${this.baseUrl}tickets`, ticket);
   }
+  // GET /api/tickets
   getAllTickets(): Observable<Ticket[]> {
-    // API endpoint: GET /api/tickets
-    return this.http.get<Ticket[]>(this.baseUrl);
+    return this.http.get<Ticket[]>(this.baseUrl + 'tickets').pipe(
+      catchError(this.handleError) 
+    );
   }
 
   getTicketsByUserId(userId: number): Observable<Ticket[]> {
-    // API endpoint: GET /api/tickets/user/{userId}
-    // veya GET /api/users/{userId}/tickets
+    // GET /api/tickets/user/{userId}
 
     return this.http.get<Ticket[]>(`${this.baseUrl}/tickets/user/${userId}`);
   }
-  // --- Hata Yönetimi ---
-
   private handleError(error: HttpErrorResponse) {
     console.error('API Hatası:', error);
     let errorMessage = 'Bilinmeyen bir hata oluştu.';
 
     if (error.error instanceof ErrorEvent) {
-      // İstemci tarafı veya ağ hatası
       errorMessage = `İstemci Hatası: ${error.error.message}`;
     } else if (error.status) {
-      // Sunucu tarafı hatası (HTTP Durum Kodu olan hatalar)
       errorMessage = `Sunucu Hatası Kodu: ${error.status} - ${error.statusText || ''}`;
       if (error.error && typeof error.error === 'object' && error.error.errors) {
-        // Validation hataları gibi daha detaylı hata mesajları
         const validationErrors = Object.values(error.error.errors).flat();
         errorMessage += `\nDetaylar: ${validationErrors.join(', ')}`;
       } else if (error.error && typeof error.error === 'string') {
@@ -54,10 +49,10 @@ export class TicketService {
         errorMessage += `\nMesaj: ${error.message}`;
       }
     } else {
-      // API'ye ulaşılamaması veya diğer düşük seviyeli ağ hataları
       errorMessage = `Ağ Bağlantı Hatası: ${error.message}`;
     }
 
-    return throwError(() => new Error(errorMessage));
+    // throwError bir fonksiyon olduğu için arrow function ile çağrılmalı
+    return throwError(() => new Error(errorMessage)); 
   }
 }

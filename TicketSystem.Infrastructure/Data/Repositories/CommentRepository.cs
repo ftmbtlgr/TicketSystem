@@ -16,7 +16,7 @@ namespace TicketSystem.Infrastructure.Data.Repositories
         public async Task<Comment?> GetByIdAsync(int id)
         {
             return await _context.Comments
-                                 .Include(c => c.User) // Yorumu yapan kullanıcıyı da dahil et
+                                 .Include(c => c.User) 
                                  .FirstOrDefaultAsync(c => c.CommentId == id);
         }
 
@@ -24,8 +24,8 @@ namespace TicketSystem.Infrastructure.Data.Repositories
         {
             return await _context.Comments
                                  .Where(c => c.TicketId == ticketId)
-                                 .Include(c => c.User) // Yorumu yapan kullanıcıyı da dahil et
-                                 .OrderBy(c => c.CommentDate) // Yorumları tarihe göre sırala
+                                 .Include(c => c.User) 
+                                 .OrderBy(c => c.CommentDate) 
                                  .ToListAsync();
         }
 

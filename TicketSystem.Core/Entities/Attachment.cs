@@ -13,7 +13,7 @@ namespace TicketSystem.Core.Entities
         [Key]
         public int AttachmentId { get; set; } 
         public required string FileName { get; set; }
-        public required string FilePath { get; set; } // Dosyanın depolandığı yol
+        public required string FilePath { get; set; } 
         public DateTime UploadDate { get; set; }
 
 
@@ -23,7 +23,7 @@ namespace TicketSystem.Core.Entities
         public int UploadedByUserId { get; set; }
 
         // Navigasyon Özellikleri
-        public TicketDto Ticket { get; set; } = null!; 
+        public Ticket Ticket { get; set; } = null!; 
         public User UploadedByUser { get; set; } = null!; 
     }
 }

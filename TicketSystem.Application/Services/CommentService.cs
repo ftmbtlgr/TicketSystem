@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Mapster;
+using TicketSystem.Application.DTOs;
 using TicketSystem.Application.Services.Interfaces;
 using TicketSystem.Core.Entities;
 using TicketSystem.Core.Interfaces;
@@ -15,82 +12,75 @@ namespace TicketSystem.Application.Services
         IUserRepository userRepository) : ICommentService
     {
         private readonly ICommentRepository _commentRepository = commentRepository;
-        private readonly ITicketRepository _ticketRepository = ticketRepository; // Yorumun eklendiği ticket'ın varlığını doğrulamak için
-        private readonly IUserRepository _userRepository = userRepository;     // Yorumu yapan kullanıcının varlığını doğrulamak için
+        private readonly ITicketRepository _ticketRepository = ticketRepository;
+        private readonly IUserRepository _userRepository = userRepository; 
 
-        public async Task<Comment?> GetCommentByIdAsync(int commentId)
+        public async Task<CommentDto?> GetCommentByIdAsync(int commentId)
         {
-            return await _commentRepository.GetByIdAsync(commentId);
+            var commentEntity = await _commentRepository.GetByIdAsync(commentId);
+            return commentEntity?.Adapt<CommentDto>();
         }
 
-        public async Task<IEnumerable<Comment>> GetCommentsByTicketIdAsync(int ticketId)
+        public async Task<IEnumerable<CommentDto>> GetCommentsByTicketIdAsync(int ticketId)
         {
-            // İş Kuralı: İlgili ticket mevcut mu?
             if (!await _ticketRepository.ExistsAsync(ticketId))
             {
                 throw new ApplicationException($"Ticket with ID {ticketId} not found for comments.");
             }
-            return await _commentRepository.GetCommentsByTicketIdAsync(ticketId);
+            var commentEntities = await _commentRepository.GetCommentsByTicketIdAsync(ticketId);
+            return commentEntities.Adapt<List<CommentDto>>();
         }
 
-        public async Task<Comment> AddCommentAsync(Comment comment)
+        public async Task<CommentDto> AddCommentAsync(CommentDto commentDto)
         {
-            // İş Kuralı: Yorumun eklendiği ticket'ın var olduğundan emin ol
-            if (!await _ticketRepository.ExistsAsync(comment.TicketId))
+            if (!await _ticketRepository.ExistsAsync(commentDto.TicketId))
             {
-                throw new ApplicationException($"Ticket with ID {comment.TicketId} not found for adding comment.");
+                throw new ApplicationException($"Ticket with ID {commentDto.TicketId} not found for adding comment.");
+            }
+            if (!await _userRepository.ExistsAsync(commentDto.UserId))
+            {
+                throw new ApplicationException($"User with ID {commentDto.UserId} not found for adding comment.");
             }
 
-            // İş Kuralı: Yorumu yapan kullanıcının var olduğundan emin ol
-            if (!await _userRepository.ExistsAsync(comment.UserId))
-            {
-                throw new ApplicationException($"User with ID {comment.UserId} not found for adding comment.");
-            }
+            var commentEntity = commentDto.Adapt<Comment>();
+            commentEntity.CommentDate = DateTime.UtcNow;
 
-            comment.CommentDate = DateTime.UtcNow;
+            await _commentRepository.AddAsync(commentEntity);
 
-            await _commentRepository.AddAsync(comment);
-
-            // Ticket'ın 'LastUpdatedDate' alanını güncelleme iş mantığı
-            var ticket = await _ticketRepository.GetByIdAsync(comment.TicketId);
+            var ticket = await _ticketRepository.GetByIdAsync(commentDto.TicketId);
             if (ticket != null)
             {
                 ticket.LastUpdatedDate = DateTime.UtcNow;
                 await _ticketRepository.UpdateAsync(ticket);
             }
 
-            return comment;
+            return commentEntity.Adapt<CommentDto>();
         }
 
-        public async Task UpdateCommentAsync(Comment comment)
+        public async Task UpdateCommentAsync(CommentDto commentDto)
         {
-            // İş Kuralı: Güncellenecek yorum mevcut mu?
-            var existingComment = await _commentRepository.GetByIdAsync(comment.CommentId);
+            var existingComment = await _commentRepository.GetByIdAsync(commentDto.CommentId);
             if (existingComment == null)
             {
-                throw new ApplicationException($"Comment with ID {comment.CommentId} not found.");
+                throw new ApplicationException($"Yorum ID {commentDto.CommentId} bulunamadı.");
             }
 
-            // İş Kuralı: Yorumun ticket'ı veya kullanıcısı değiştirilemez (genellikle)
-            if (existingComment.TicketId != comment.TicketId || existingComment.UserId != comment.UserId)
+            if (existingComment.TicketId != commentDto.TicketId || existingComment.UserId != commentDto.UserId)
             {
-                throw new ApplicationException("Cannot change ticket or user for an existing comment.");
+                throw new ApplicationException("Yorumun kullanıcı ve yorumu değiştirilemez.");
             }
 
-            // Yorumun sadece metninin veya diğer güncellenebilir alanlarının değiştiğini varsayıyoruz.
-            existingComment.CommentText = comment.CommentText; // Sadece metin güncelleniyorsa
+            existingComment.CommentText = commentDto.CommentText; 
 
             await _commentRepository.UpdateAsync(existingComment);
         }
 
         public async Task DeleteCommentAsync(int commentId)
         {
-            // İş Kuralı: Yorum mevcut mu?
             if (!await _commentRepository.ExistsAsync(commentId))
             {
                 throw new ApplicationException($"Comment with ID {commentId} not found.");
             }
-            // İş Kuralı: Silme yetkilendirmesi (örn. sadece yorumu yapan veya admin silebilir)
 
             await _commentRepository.DeleteAsync(commentId);
         }

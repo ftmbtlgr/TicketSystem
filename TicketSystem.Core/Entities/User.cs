@@ -14,7 +14,7 @@ namespace TicketSystem.Core.Entities
         [Key]
         public int UserId { get; set; } 
         public required string Username { get; set; }
-        public byte[] PasswordHash { get; set; } = null!; // Bu 'required' olarak işaretlenebilir ama null! ile başlangıç
+        public byte[] PasswordHash { get; set; } = null!; 
         public byte[] PasswordSalt { get; set; } = null!;
         public required string Email { get; set; }
         public required string FirstName { get; set; }
@@ -25,8 +25,8 @@ namespace TicketSystem.Core.Entities
         public bool IsActive { get; set; } = true;
 
         // İlişkiler
-        public ICollection<TicketDto>? CreatedTickets { get; set; } 
-        public ICollection<TicketDto>? AssignedTickets { get; set; } 
+        public ICollection<Ticket>? CreatedTickets { get; set; } 
+        public ICollection<Ticket>? AssignedTickets { get; set; } 
         public ICollection<Comment>? Comments { get; set; } 
     }
 }
